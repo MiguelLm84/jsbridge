@@ -2,10 +2,10 @@
     <head>
         <meta content="text/html; charset=utf-8" http-equiv="content-type">
         <title>
-            js调用java
+             Hi,JsBridge.
         </title>
     </head>
-    
+
     <body>
         <p>
             <xmp id="show">
@@ -15,38 +15,39 @@
             <xmp id="init">
             </xmp>
         </p>
+
         <p>
-            <input type="text" id="text1" value="用户名(username)" />
-        </p>
-        <p>
-            <input type="text" id="text2" value="password" />
-        </p>
-        <p>
-            <input type="button" id="enter" value="发消息给Native" onclick="testClick();"
+            <input type="button" id="enter" value="Send messages to Native" onclick="send();"
             />
         </p>
         <p>
-            <input type="button" id="enter1" value="调用Native方法" onclick="testClick1();"
+            <input type="button" id="enter1" value="Print(Call Native method)" onclick="print();"
             />
         </p>
         <p>
-            <input type="button" id="enter2" value="显示html" onclick="testDiv();" />
+            <input type="button" id="enter2" value="Show html" onclick="testDiv();" />
         </p>
         <p>
-            <input type="file" value="打开文件" />
+            <input type="button" id="enter3" value="LightOn" onclick="testLightOn();" />
         </p>
+        <p>
+            <input type="button" id="enter4" value="LightOff" onclick="testLightOff();" />
+        </p>
+
     </body>
     <script>
         function testDiv() {
             document.getElementById("show").innerHTML = document.getElementsByTagName("html")[0].innerHTML;
         }
 
-        function testClick() {
-            var str1 = document.getElementById("text1").value;
-            var str2 = document.getElementById("text2").value;
-
+        function send() {
             //send message to native
-            var data = {id: 1, content: "这是一个图片 <img src=\"a.png\"/> test\r\nhahaha"};
+
+            //add wuf
+            //全局接收
+            //第一个参数要发送的数据 第二个参数js在被回调后具体执行方法，responseData为java层回传数据
+
+            var data = {id: 1, content: "hahaha"};
             window.WebViewJavascriptBridge.send(
                 data
                 , function(responseData) {
@@ -56,14 +57,32 @@
 
         }
 
-        function testClick1() {
-            var str1 = document.getElementById("text1").value;
-            var str2 = document.getElementById("text2").value;
-
+        function print() {
             //call native method
+            //第一个参数是 调用java的函数名字 第二个参数是要传递的数据 第三个参数js在被回调后具体执行方法，responseData为java层回传数据
             window.WebViewJavascriptBridge.callHandler(
                 'submitFromWeb'
-                , {'param': '中文测试'}
+                , {'param': 'Chinese test中文测试'}
+                , function(responseData) {
+                    document.getElementById("show").innerHTML = "send get responseData from java, data = " + responseData
+                }
+            );
+        }
+
+        function testLightOn() {
+            window.WebViewJavascriptBridge.callHandler(
+                'lightOn'
+                , {'param': 'on'}
+                , function(responseData) {
+                    document.getElementById("show").innerHTML = "send get responseData from java, data = " + responseData
+                }
+            );
+        }
+
+        function testLightOff() {
+            window.WebViewJavascriptBridge.callHandler(
+                'lightOff'
+                , {'param': 'off'}
                 , function(responseData) {
                     document.getElementById("show").innerHTML = "send get responseData from java, data = " + responseData
                 }
