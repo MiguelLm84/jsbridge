@@ -7,61 +7,58 @@
     </head>
 
     <body>
-        <p>
-            <xmp id="show">
-            </xmp>
-        </p>
-        <p>
-            <xmp id="init">
-            </xmp>
-        </p>
 
         <p>
-            <input type="button" id="enter" value="Send messages to Native" onclick="send();"
+            <input type="button" id="enter1" value="PrintStr" onclick="printStr();"
             />
         </p>
         <p>
-            <input type="button" id="enter1" value="Print(Call Native method)" onclick="print();"
-            />
+            <input type="button" id="enter11" value="PrintCmd" onclick="printCmd();"/>
         </p>
         <p>
             <input type="button" id="enter2" value="Show html" onclick="testDiv();" />
         </p>
         <p>
-            <input type="button" id="enter3" value="LightOn" onclick="testLightOn();" />
+            <input type="button" id="enter3" value="redLightOn" onclick="redLightOn();" />
         </p>
         <p>
-            <input type="button" id="enter4" value="LightOff" onclick="testLightOff();" />
+            <input type="button" id="enter4" value="redLightOff" onclick="redLightOff();" />
         </p>
+        <p>
+            <input type="button" id="enter5" value="blueLightOn" onclick="blueLightOn();" />
+        </p>
+        <p>
+            <input type="button" id="enter6" value="blueLightOff" onclick="blueLightOff();" />
+        </p>
+
+        <a href="https://bitbucket.org/wufen/jsbridge/src/master/" target="_blank">Source</a>
+
+        <p>
+            <xmp id="init">
+            </xmp>
+        </p>
+        <p>
+            <xmp id="show">
+            </xmp>
+        </p>
+
 
     </body>
     <script>
         function testDiv() {
             document.getElementById("show").innerHTML = document.getElementsByTagName("html")[0].innerHTML;
-        }
-
-        function send() {
-            //send message to native
-
-            //add wuf
-            //全局接收
-            //第一个参数要发送的数据 第二个参数js在被回调后具体执行方法，responseData为java层回传数据
-
-            var data = {id: 1, content: "hahaha"};
-            window.WebViewJavascriptBridge.send(
-                data
-                , function(responseData) {
-                    document.getElementById("show").innerHTML = "repsonseData from java, data = " + responseData
-                }
-            );
 
         }
 
-        function print() {
+
+        function printStr() {
             //call native method
+            //The first parameter    the name of the function that calls Java.
+            //The second parameter    the data to be passed.
+            //The third parameter     the method that JS is executed after callback, and responseData is the Java layer return.
             //第一个参数是 调用java的函数名字 第二个参数是要传递的数据 第三个参数js在被回调后具体执行方法，responseData为java层回传数据
             window.WebViewJavascriptBridge.callHandler(
-                'submitFromWeb'
+                'printStrFromWeb'
                 , {'param': 'Chinese test中文测试'}
                 , function(responseData) {
                     document.getElementById("show").innerHTML = "send get responseData from java, data = " + responseData
@@ -69,22 +66,53 @@
             );
         }
 
-        function testLightOn() {
+        function printCmd() {
+
             window.WebViewJavascriptBridge.callHandler(
-                'lightOn'
-                , {'param': 'on'}
+                'printCmdFromWeb'
+                , {'param': '1F1B1F53'}   //eg:1F1B1F53  is Self-checking page
                 , function(responseData) {
-                    document.getElementById("show").innerHTML = "send get responseData from java, data = " + responseData
+                    document.getElementById("show").innerHTML = "get responseData from java, data = " + responseData
                 }
             );
         }
 
-        function testLightOff() {
+        function redLightOn() {
+            window.WebViewJavascriptBridge.callHandler(
+                'lightOn'
+                , {'param': 'RED'}
+                , function(responseData) {
+                    document.getElementById("show").innerHTML = "get responseData from java, data = " + responseData
+                }
+            );
+        }
+
+        function redLightOff() {
             window.WebViewJavascriptBridge.callHandler(
                 'lightOff'
-                , {'param': 'off'}
+                , {'param': 'RED'}
                 , function(responseData) {
-                    document.getElementById("show").innerHTML = "send get responseData from java, data = " + responseData
+                    document.getElementById("show").innerHTML = "get responseData from java, data = " + responseData
+                }
+            );
+        }
+
+        function blueLightOn() {
+            window.WebViewJavascriptBridge.callHandler(
+                'lightOn'
+                , {'param': 'BLUE'}
+                , function(responseData) {
+                    document.getElementById("show").innerHTML = "get responseData from java, data = " + responseData
+                }
+            );
+        }
+
+        function blueLightOff() {
+            window.WebViewJavascriptBridge.callHandler(
+                'lightOff'
+                , {'param': 'BLUE'}
+                , function(responseData) {
+                    document.getElementById("show").innerHTML = "get responseData from java, data = " + responseData
                 }
             );
         }

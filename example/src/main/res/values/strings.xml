@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">JsBridge</string>
-    <string name="button_name">Hi,JsBridge.</string>
+    <string name="button_name">Java call web</string>
+
+    <string name="set_url">URL</string>
 
     <string name="error_configuration">Please configure your serial port first.</string>
     <string name="error_security">You do not have read/write permission to the serial

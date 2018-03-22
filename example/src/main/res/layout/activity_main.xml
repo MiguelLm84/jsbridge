@@ -4,15 +4,33 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-    <!-- button 演示Java调用web -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <EditText
+            android:id="@+id/et_url"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="3"/>
+        <Button
+            android:id="@+id/bt_seturl"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/set_url"/>
+    </LinearLayout>
+    <!-- button Demo Java Call web -->
     <Button 
         android:id="@+id/button"
-        android:layout_width="match_parent"
+        android:layout_width="200dp"
         android:text="@string/button_name"
         android:layout_height="48dp"
+        android:visibility="gone"
         />
     
-    <!-- webview 演示web调用Java -->
+    <!-- webview Demo web call Java-->
     <com.github.lzyzsd.jsbridge.BridgeWebView
         android:id="@+id/webView"
         android:layout_width="match_parent"

@@ -6,11 +6,13 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.citaq.citaqprinter.CitaqActivity;
@@ -22,19 +24,38 @@ import com.github.lzyzsd.jsbridge.BridgeWebView;
 import com.github.lzyzsd.jsbridge.CallBackFunction;
 import com.github.lzyzsd.jsbridge.DefaultHandler;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.Map;
 
 public class MainActivity extends CitaqActivity implements OnClickListener {
 
-	private final String TAG = "MainActivity";
+	private static final String TAG = "MainActivity";
+
+	private static final String REDLIGHT = "RED";
+	private static final String BLUELIGHT = "BLUE";
+
+	private static final String PRINTSTRFROMWEB = "printStrFromWeb";
+	private static final String PRINTCMDFROMWEB = "printCmdFromWeb";
+	private static final String LIGHTON = "lightOn";
+	private static final String LIGHTOFF = "lightOff";
+	private static final String FUNCTIONINJS = "functionInJs";
+
 	Context mContext;
 
 	BridgeWebView webView;
 
-	Button button;
+	Button bt_setUrl, bt_callWeb;
+
+	EditText et_url;
+
+	String url = null;
 
 	int RESULT_CODE = 0;
+
+	Type listType;
 
 	ValueCallback<Uri> mUploadMessage;
 
@@ -56,10 +77,15 @@ public class MainActivity extends CitaqActivity implements OnClickListener {
 		mContext =this;
 
         webView = (BridgeWebView) findViewById(R.id.webView);
+		et_url = (EditText) findViewById(R.id.et_url);
 
-		button = (Button) findViewById(R.id.button);
+		bt_callWeb = (Button) findViewById(R.id.button);
+		bt_callWeb.setOnClickListener(this);
 
-		button.setOnClickListener(this);
+		bt_setUrl = (Button) findViewById(R.id.bt_seturl);
+		bt_setUrl.setOnClickListener(this);
+
+		listType=new TypeToken<Map<String,String>>(){}.getType();//TypeToken内的泛型就是Json数据中的类型
 
 		//DefaultHandler接收全部来自web的数据,DefaultHandler有回调
 		webView.setDefaultHandler(new DefaultHandler(){
@@ -67,7 +93,7 @@ public class MainActivity extends CitaqActivity implements OnClickListener {
 			public void handler(String data, CallBackFunction function) {
 				if(function != null){
 					function.onCallBack("DefaultHandler response" + data);
-					Toast.makeText(mContext,data,Toast.LENGTH_LONG).show();
+
 				}
 			}
 		});
@@ -90,7 +116,7 @@ public class MainActivity extends CitaqActivity implements OnClickListener {
 			}
 		});
 
-		webView.loadUrl("file:///android_asset/demo.html");
+	//	webView.loadUrl("file:///android_asset/demo.html");
 
 //		webView.loadUrl("http://192.168.1.115:8080/test/demo.html");
 
@@ -98,48 +124,78 @@ public class MainActivity extends CitaqActivity implements OnClickListener {
 		//          实现js回调的handler
 		//必须和js同名函数，注册具体执行函数，类似java实现类。
 		//第一参数是订阅的java本地函数名字 第二个参数是回调Handler , 参数返回js请求
-		webView.registerHandler("submitFromWeb", new BridgeHandler() {
+		webView.registerHandler(PRINTSTRFROMWEB, new BridgeHandler() {
 
 			@Override
 			public void handler(String data, CallBackFunction function) {
-				Log.i(TAG, "handler = submitFromWeb, data from web = " + data);
+				Log.i(TAG, "handler = printStrFromWeb, data from web = " + data);
 
+				String dataOK =getData(data);
 				try {
-					data =data+"\n";
-					mOutputStream.write(data.getBytes("GBK"));
+					dataOK =dataOK+"\n";
+					mOutputStream.write(dataOK.getBytes("GBK"));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
-					function.onCallBack("submitFromWeb:Print data form Js failure.（test Chinese：打印失败）");  //指定Handler收到Web发来的数据，回传数据
+					function.onCallBack("printStrFromWeb:Print data form Js failure.（test Chinese：打印失败）");  //指定Handler收到Web发来的数据，回传数据
 				}
 
-				function.onCallBack("submitFromWeb:Print data form Js OK.（test Chinese：打印成功）");  //指定Handler收到Web发来的数据，回传数据
+				function.onCallBack("printStrFromWeb:Print data form Js OK.（test Chinese：打印成功）");  //指定Handler收到Web发来的数据，回传数据
 			}
 
 		});
 
-		webView.registerHandler("lightOn", new BridgeHandler() {
+		webView.registerHandler(PRINTCMDFROMWEB, new BridgeHandler() {
 
 			@Override
 			public void handler(String data, CallBackFunction function) {
-				Log.i(TAG, "handler = lightOn, data from web = " + data);
+				Log.i(TAG, "handler = printCmdFromWeb, data from web = " + data);
 
-				LEDControl.trunOnBlueRight(true);
+				try {
+					mOutputStream.write(hexStringToByteArray(getData(data)));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					function.onCallBack("printCmdFromWeb:Print data form Js failure.（test Chinese：打印失败）");  //指定Handler收到Web发来的数据，回传数据
+				}
 
-				function.onCallBack("lightOn:Print data form Js OK.（light on）");  //指定Handler收到Web发来的数据，回传数据
+				function.onCallBack("printCmdFromWeb:Print data form Js OK.（test Chinese：打印成功）");  //指定Handler收到Web发来的数据，回传数据
 			}
 
 		});
 
-		webView.registerHandler("lightOff", new BridgeHandler() {
+		webView.registerHandler(LIGHTON, new BridgeHandler() {
 
 			@Override
 			public void handler(String data, CallBackFunction function) {
-				Log.i(TAG, "handler = lightOff, data from web = " + data);
+				Log.i(TAG, "handler = redLightOn, data from web = " + data);
 
-				LEDControl.trunOnBlueRight(false);
 
-				function.onCallBack("lightOff:Print data form Js OK.（light off）");  //指定Handler收到Web发来的数据，回传数据
+				if(REDLIGHT.equals(getData(data))){
+					LEDControl.trunOnRedRight(true);
+					function.onCallBack("redLightOn:Print data form Js OK.（light on）");  //指定Handler收到Web发来的数据，回传数据
+				}else if(BLUELIGHT.equals(getData(data))){
+					LEDControl.trunOnBlueRight(true);
+					function.onCallBack("lightOn:Print data form Js OK.（light on）");  //指定Handler收到Web发来的数据，回传数据
+				}
+
+			}
+
+		});
+
+		webView.registerHandler(LIGHTOFF, new BridgeHandler() {
+
+			@Override
+			public void handler(String data, CallBackFunction function) {
+				Log.i(TAG, "handler = redLightOff, data from web = " + data);
+
+				if(REDLIGHT.equals(getData(data))){
+					LEDControl.trunOnRedRight(false);
+					function.onCallBack("redLightOn:Print data form Js OK.（light off）");  //指定Handler收到Web发来的数据，回传数据
+				}else if(BLUELIGHT.equals(getData(data))){
+					LEDControl.trunOnBlueRight(false);
+					function.onCallBack("lightOn:Print data form Js OK.（light off）");  //指定Handler收到Web发来的数据，回传数据
+				}
 			}
 
 		});
@@ -186,8 +242,8 @@ public class MainActivity extends CitaqActivity implements OnClickListener {
 
 	@Override
 	public void onClick(View v) {
-		if (button.equals(v)) {
-            webView.callHandler("functionInJs", "data from Java", new CallBackFunction() {
+		if (bt_callWeb.equals(v)) {
+            webView.callHandler(FUNCTIONINJS, "data from Java", new CallBackFunction() {
 
 				@Override
 				public void onCallBack(String data) {
@@ -196,7 +252,47 @@ public class MainActivity extends CitaqActivity implements OnClickListener {
 				}
 
 			});
+		}else if(bt_setUrl.equals(v)){
+			String  c_url =et_url.getText().toString().trim();
+			if("".equals(c_url)){
+				webView.loadUrl("file:///android_asset/demo.html");
+			}else{
+				url = et_url.getText().toString();
+				webView.loadUrl(url);
+
+			}
+
 		}
+
+	}
+
+	public byte[] hexStringToByteArray(String s) {
+		s = s.replaceAll(" ", "");
+		int len = s.length();
+		byte[] b = new byte[len / 2];
+		for (int i = 0; i < len; i += 2) {
+			// 两位一组，表示一个字节,把这样表示的16进制字符串，还原成一个字节
+			b[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character
+					.digit(s.charAt(i + 1), 16));
+		}
+		return b;
+	}
+
+
+	private String getData(String data){
+		Map<String,String> map=new Gson().fromJson(data, listType);
+		String dataOK = map.get("param");
+    	return dataOK;
+	}
+
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+
+		if(keyCode==KeyEvent.KEYCODE_BACK && webView.canGoBack()){
+			webView.goBack();
+			return true;
+		}
+		return super.onKeyDown(keyCode, event);
+
 
 	}
 
